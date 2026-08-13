@@ -1,16 +1,18 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>FeliMart</title>
-</head>
-<body>
-    <h1>Product List</h1>
+{% extends 'store/base.html' %}
 
-    <ul>
+{% block content %}
+<div class="row">
     {% for product in products %}
-        <li>{{ product.name }} - ${{ product.price }} - {{ product.category }}</li>
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ product.name }}</h5>
+                <span class="badge bg-secondary">{{ product.rarity }}</span>
+                <p class="card-text">{{ product.description }}</p>
+                <p class="card-text"><strong>${{ product.price }}</strong> — {{ product.category }}</p>
+            </div>
+        </div>
+    </div>
     {% endfor %}
-    </ul>
-
-</body>
-</html>
+</div>
+{% endblock %}
