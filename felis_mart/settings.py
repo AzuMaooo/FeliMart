@@ -75,8 +75,12 @@ WSGI_APPLICATION = 'felis_mart.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'felismart',
+        'USER': 'felismart_user',
+        'PASSWORD': 'azuki14',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
