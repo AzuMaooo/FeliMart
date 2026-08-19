@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Product, Order, OrderItem
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+import paypalrestsdk
 
 def product_list(request):
     products = Product.objects.all()
@@ -99,7 +100,75 @@ def checkout(request):
     order.total_price = order_total
     order.save()
 
-    request.session['cart'] = {}
+    return redirect('order_confirm', order_id=order.id)
 
-    messages.success(request, f'Order #{order.id} placed successfully!')
+@login_required
+def order_confirm(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    order_items = order.items.all()
+    return render(request, 'store/order_confirm.html', {'order': order, 'order_items': order_items})
+
+@login_required
+def paypal_payment(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+
+    payment = paypalrestsdk.Payment({
+        "intent": "sale",
+        "payer": {"payment_method": "paypal"},
+        "redirect_urls": {
+            "return_url": request.build_absolute_uri(f'/paypal/success/{order.id}/'),
+            "cancel_url": request.build_absolute_uri(f'/paypal/cancel/{order.id}/'),
+        },
+        "transactions": [{
+            "item_list": {
+                "items": [
+                    {
+                        "name": item.product.name,
+                        "sku": str(item.product.id),
+                        "price": str(item.product.price),
+                        "currency": "USD",
+                        "quantity": item.quantity
+                    } for item in order.items.all()
+                ]
+            },
+            "amount": {
+                "total": str(order.total_price),
+                "currency": "USD"
+            },
+            "description": f"FeliMart Order #{order.id}"
+        }]
+    })
+
+    if payment.create():
+        for link in payment.links:
+            if link.rel == "approval_url":
+                return redirect(link.href)
+    else:
+        messages.error(request, 'Something went wrong creating the PayPal payment.')
+        return redirect('order_confirm', order_id=order.id)
+
+@login_required
+def paypal_success(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    payment_id = request.GET.get('paymentId')
+    payer_id = request.GET.get('PayerID')
+
+    payment = paypalrestsdk.Payment.find(payment_id)
+
+    if payment.execute({"payer_id": payer_id}):
+        order.status = 'paid'
+        order.save()
+        request.session['cart'] = {}
+        messages.success(request, f'Payment successful! Order #{order.id} is confirmed.')
+    else:
+        messages.error(request, 'Payment could not be completed.')
+
+    return redirect('view_cart')
+
+@login_required
+def paypal_cancel(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    order.status = 'cancelled'
+    order.save()
+    messages.error(request, f'Payment cancelled for Order #{order.id}.')
     return redirect('view_cart')

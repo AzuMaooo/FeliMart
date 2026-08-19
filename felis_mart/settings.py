@@ -85,6 +85,18 @@ DATABASES = {
     }
 }
 
+#PAYPAL
+PAYPAL_CLIENT_ID = config('PAYPAL_CLIENT_ID')
+PAYPAL_SECRET = config('PAYPAL_SECRET')
+PAYPAL_MODE = config('PAYPAL_MODE')
+
+import paypalrestsdk
+
+paypalrestsdk.configure({
+    "mode": PAYPAL_MODE,
+    "client_id": PAYPAL_CLIENT_ID,
+    "client_secret": PAYPAL_SECRET,
+})
 
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
