@@ -1,0 +1,46 @@
+﻿{% extends 'store/base.html' %}
+{% block content %}
+<a href="{% url 'product_list' %}" class="btn btn-secondary mb-3">← Back to shop</a>
+
+<h2>🐾 Shopping Advisor</h2>
+<p>Ask our AI assistant for a product recommendation!</p>
+
+<div class="mb-3">
+    <strong>Quick questions:</strong><br>
+    <form method="POST" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" name="question" value="What's a good treat for a picky eater?" class="btn btn-sm btn-outline-secondary mt-2">Picky eater treats?</button>
+        <button type="submit" name="question" value="What toys do you recommend for an active cat?" class="btn btn-sm btn-outline-secondary mt-2">Toys for active cats?</button>
+        <button type="submit" name="question" value="What's your most popular rare item?" class="btn btn-sm btn-outline-secondary mt-2">Rare items?</button>
+        <button type="submit" name="question" value="What accessories help a cat relax?" class="btn btn-sm btn-outline-secondary mt-2">Relaxation accessories?</button>
+    </form>
+</div>
+
+<form method="POST">
+    {% csrf_token %}
+    <div class="mb-3">
+        <input type="text" name="question" class="form-control" placeholder="e.g. What's good for a cat with a shiny coat?" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Ask</button>
+</form>
+
+{% if response_text %}
+<div class="alert alert-info mt-4">
+    <strong>Recommendation:</strong>
+    <p class="mb-0">{{ response_text }}</p>
+</div>
+{% endif %}
+
+{% if history %}
+<h4 class="mt-5">Your Past Questions</h4>
+<div class="list-group">
+    {% for item in history %}
+    <div class="list-group-item">
+        <strong>Q: {{ item.question }}</strong>
+        <p class="mb-1">{{ item.answer }}</p>
+        <small class="text-muted">{{ item.created_at }}</small>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

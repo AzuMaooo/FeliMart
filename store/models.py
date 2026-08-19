@@ -50,3 +50,11 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.product.name}"
+
+class AdvisorHistory(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    question = models.TextField()
+    answer = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"Shopping Advisor for {self.user.username}"

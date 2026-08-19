@@ -1,8 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Product, Order, OrderItem
+from .models import Product, Order, OrderItem, AdvisorHistory
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 import paypalrestsdk
+import anthropic
+from django.conf import settings
 
 def product_list(request):
     products = Product.objects.all()
@@ -172,3 +174,49 @@ def paypal_cancel(request, order_id):
     order.save()
     messages.error(request, f'Payment cancelled for Order #{order.id}.')
     return redirect('view_cart')
+
+@login_required
+def shopping_advisor(request):
+    response_text = None
+
+    if request.method == 'POST':
+        user_question = request.POST.get('question')
+        products = Product.objects.all()
+
+        product_list_text = "\n".join([
+            f"- {p.name} ({p.category}, {p.rarity}): {p.description} Price: ${p.price}"
+            for p in products
+        ])
+
+        client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
+
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=300,
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"""You are a helpful shopping assistant for FeliMart, a cat products store. 
+Only recommend products from this exact list, do not invent products that aren't listed:
+
+{product_list_text}
+
+Customer question: {user_question}
+
+Give a short, friendly recommendation in 1-2 sentences based only on the products above. 
+Do not use em dashes (—) anywhere in your response, use commas or periods instead."""
+                }
+            ]
+        )
+
+        response_text = message.content[0].text
+
+        AdvisorHistory.objects.create(
+            user=request.user,
+            question=user_question,
+            answer=response_text
+        )
+
+    history = AdvisorHistory.objects.filter(user=request.user).order_by('-created_at')[:10]
+
+    return render(request, 'store/advisor.html', {'response_text': response_text, 'history': history})
