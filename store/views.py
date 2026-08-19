@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Product 
+from .models import Product, Order, OrderItem
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 
 def product_list(request):
     products = Product.objects.all()
@@ -71,3 +72,34 @@ def view_cart(request):
         })
 
     return render(request, 'store/cart.html', {'cart_items': cart_items, 'total': total})
+
+@login_required
+def checkout(request):
+    cart = request.session.get('cart', {})
+
+    if not cart:
+        messages.error(request, 'Your cart is empty.')
+        return redirect('view_cart')
+
+    order = Order.objects.create(user=request.user, total_price=0)
+
+    order_total = 0
+    for product_id_str, quantity in cart.items():
+        product = get_object_or_404(Product, id=int(product_id_str))
+        line_total = product.price * quantity
+        order_total += line_total
+
+        OrderItem.objects.create(
+            order=order,
+            product=product,
+            quantity=quantity,
+            total_price=line_total
+        )
+
+    order.total_price = order_total
+    order.save()
+
+    request.session['cart'] = {}
+
+    messages.success(request, f'Order #{order.id} placed successfully!')
+    return redirect('view_cart')

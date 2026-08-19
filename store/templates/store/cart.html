@@ -32,9 +32,10 @@
     </tbody>
 </table>
 <h4>Total: ${{ total }}</h4>
-{% else %}
-<p>Your cart is empty.</p>
-{% endif %}
+    <a href="{% url 'checkout' %}" class="btn btn-success">Proceed to Checkout</a>
+    {% else %}
+    <p>Your cart is empty.</p>
+    {% endif %}
 
-<a href="{% url 'product_list' %}" class="btn btn-secondary mb-3">← Back to shop</a>
-{% endblock %}
+    <a href="{% url 'product_list' %}" class="btn btn-secondary mb-3">← Back to shop</a>
+    {% endblock %}
