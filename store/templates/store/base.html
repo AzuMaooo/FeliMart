@@ -13,9 +13,31 @@
     </nav>
 
     <div class="container">
+        {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+            <div class="alert alert-success fade-out">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
         {% block content %}
         {% endblock %}
     </div>
+    <style>
+        .fade-out {
+            animation: fadeOut 3s forwards;
+            animation-delay: 2s;
+        }
 
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
+        }
+    </style>
 </body>
 </html>

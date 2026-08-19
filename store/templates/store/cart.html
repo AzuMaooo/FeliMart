@@ -9,14 +9,24 @@
             <th>Product</th>
             <th>Quantity</th>
             <th>Subtotal</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
         {% for item in cart_items %}
         <tr>
             <td>{{ item.product.name }}</td>
-            <td>{{ item.quantity }}</td>
+            <td>
+                <form method="POST" action="{% url 'update_cart' item.product.id %}" class="d-flex align-items-center gap-2">
+                    {% csrf_token %}
+                    <input type="number" name="quantity" value="{{ item.quantity }}" min="0" class="form-control form-control-sm" style="width: 70px;">
+                    <button type="submit" class="btn btn-sm btn-secondary">Update</button>
+                </form>
+            </td>
             <td>${{ item.subtotal }}</td>
+            <td>
+                <a href="{% url 'remove_from_cart' item.product.id %}" class="btn btn-sm btn-danger">Remove</a>
+            </td>
         </tr>
         {% endfor %}
     </tbody>
