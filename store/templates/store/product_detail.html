@@ -3,10 +3,27 @@
 <a href="{% url 'product_list' %}" class="btn btn-secondary mb-3">← Back to shop</a>
 <div class="card">
     <div class="card-body">
-        <h5 class="card-title">{{ product.name }}</h5>
-        <span class="badge bg-secondary">{{ product.rarity }}</span>
+        <h5 class="card-title product-name">
+            <a href="{% url 'product_detail' product.id %}" class="product-name-link">{{ product.name }}</a>
+            {% if product.rarity == 'rare' %}
+            <span class="badge rarity-badge" style="background-color: #ffd700; color: #000; border: 2px solid #b8860b; font-weight: bold;">⭐ {{ product.rarity }}</span>
+            {% else %}
+            <span class="badge rarity-badge bg-info text-dark">{{ product.rarity }}</span>
+            {% endif %}
+        </h5>
+
+<div class="mb-2">
+    {% if product.category == 'food' %}
+    <span class="badge" style="background-color: #ffb366; color: #000;">{{ product.category }}</span>
+    {% elif product.category == 'toy' %}
+    <span class="badge bg-success">{{ product.category }}</span>
+    {% elif product.category == 'accessory' %}
+    <span class="badge" style="background-color: #9b59b6; color: #fff;">{{ product.category }}</span>
+    {% endif %}
+</div>
+
         <p class="card-text">{{ product.description }}</p>
-        <p class="card-text"><strong>${{ product.price }}</strong> — {{ product.category }}</p>
+        <p class="card-text"><strong class="text-danger">${{ product.price }}</strong></p>
         <form method="POST" action="{% url 'add_to_cart' product.id %}" class="d-flex align-items-center gap-2">
             {% csrf_token %}
             <input type="number" name="quantity" value="1" min="1" class="form-control form-control-sm" style="width: 70px;">
